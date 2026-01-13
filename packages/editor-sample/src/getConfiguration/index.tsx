@@ -1,3 +1,6 @@
+import type { HtmlContentDto } from '../types/api';
+import { transformApiTemplate } from '../services/transformApiTemplate';
+
 import EMPTY_EMAIL_MESSAGE from './sample/empty-email-message';
 import ONE_TIME_PASSCODE from './sample/one-time-passcode';
 import ORDER_ECOMMERCE from './sample/order-ecommerce';
@@ -8,7 +11,17 @@ import RESPOND_TO_MESSAGE from './sample/respond-to-message';
 import SUBSCRIPTION_RECEIPT from './sample/subscription-receipt';
 import WELCOME from './sample/welcome';
 
-export default function getConfiguration(template: string) {
+export default function getConfiguration(template: string, apiTemplates?: HtmlContentDto[]) {
+  if (template.startsWith('#api/')) {
+    const subject = decodeURIComponent(template.replace('#api/', ''));
+    if (apiTemplates) {
+      const found = apiTemplates.find((t) => t.subject === subject);
+      if (found) {
+        return transformApiTemplate(found);
+      }
+    }
+  }
+
   if (template.startsWith('#sample/')) {
     const sampleName = template.replace('#sample/', '');
     switch (sampleName) {

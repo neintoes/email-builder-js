@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import getConfiguration from '../../getConfiguration';
+import type { HtmlContentDto } from '../../types/api';
 
 import { TEditorConfiguration } from './core';
 
@@ -14,6 +15,10 @@ type TValue = {
 
   inspectorDrawerOpen: boolean;
   samplesDrawerOpen: boolean;
+
+  apiTemplates: HtmlContentDto[];
+  apiTemplatesLoading: boolean;
+  apiTemplatesError: string | null;
 };
 
 const editorStateStore = create<TValue>(() => ({
@@ -25,6 +30,10 @@ const editorStateStore = create<TValue>(() => ({
 
   inspectorDrawerOpen: true,
   samplesDrawerOpen: true,
+
+  apiTemplates: [],
+  apiTemplatesLoading: false,
+  apiTemplatesError: null,
 }));
 
 export function useDocument() {
@@ -106,4 +115,35 @@ export function toggleSamplesDrawerOpen() {
 
 export function setSelectedScreenSize(selectedScreenSize: TValue['selectedScreenSize']) {
   return editorStateStore.setState({ selectedScreenSize });
+}
+
+export function useApiTemplates() {
+  return editorStateStore((s) => s.apiTemplates);
+}
+
+export function useApiTemplatesLoading() {
+  return editorStateStore((s) => s.apiTemplatesLoading);
+}
+
+export function useApiTemplatesError() {
+  return editorStateStore((s) => s.apiTemplatesError);
+}
+
+export function setApiTemplates(templates: HtmlContentDto[]) {
+  return editorStateStore.setState({
+    apiTemplates: templates,
+    apiTemplatesLoading: false,
+    apiTemplatesError: null,
+  });
+}
+
+export function setApiTemplatesLoading(loading: boolean) {
+  return editorStateStore.setState({ apiTemplatesLoading: loading });
+}
+
+export function setApiTemplatesError(error: string | null) {
+  return editorStateStore.setState({
+    apiTemplatesError: error,
+    apiTemplatesLoading: false,
+  });
 }

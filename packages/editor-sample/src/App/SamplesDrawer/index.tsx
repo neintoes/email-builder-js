@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Box, Button, Divider, Drawer, Link, Stack, Typography } from '@mui/material';
 
-import { useSamplesDrawerOpen } from '../../documents/editor/EditorContext';
+import {
+  useSamplesDrawerOpen,
+  useApiTemplates,
+  useApiTemplatesLoading,
+  useApiTemplatesError,
+  setApiTemplates,
+  setApiTemplatesLoading,
+  setApiTemplatesError,
+} from '../../documents/editor/EditorContext';
+import { fetchTemplates } from '../../services/templateApi';
 
 import SidebarButton from './SidebarButton';
 import logo from './waypoint.svg';
@@ -11,6 +20,34 @@ export const SAMPLES_DRAWER_WIDTH = 240;
 
 export default function SamplesDrawer() {
   const samplesDrawerOpen = useSamplesDrawerOpen();
+  const apiTemplates = useApiTemplates();
+  const apiTemplatesLoading = useApiTemplatesLoading();
+  const apiTemplatesError = useApiTemplatesError();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTemplates() {
+      setApiTemplatesLoading(true);
+      try {
+        const templates = await fetchTemplates();
+        if (!cancelled) {
+          setApiTemplates(templates);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to load templates:', error);
+          setApiTemplatesError('Failed to load templates');
+        }
+      }
+    }
+
+    loadTemplates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Drawer
@@ -29,14 +66,30 @@ export default function SamplesDrawer() {
 
           <Stack alignItems="flex-start">
             <SidebarButton href="#">Empty</SidebarButton>
-            <SidebarButton href="#sample/welcome">Welcome email</SidebarButton>
-            <SidebarButton href="#sample/one-time-password">One-time passcode (OTP)</SidebarButton>
-            <SidebarButton href="#sample/reset-password">Reset password</SidebarButton>
-            <SidebarButton href="#sample/order-ecomerce">E-commerce receipt</SidebarButton>
-            <SidebarButton href="#sample/subscription-receipt">Subscription receipt</SidebarButton>
-            <SidebarButton href="#sample/reservation-reminder">Reservation reminder</SidebarButton>
-            <SidebarButton href="#sample/post-metrics-report">Post metrics</SidebarButton>
-            <SidebarButton href="#sample/respond-to-message">Respond to inquiry</SidebarButton>
+
+            {apiTemplatesLoading && (
+              <Typography variant="caption" color="text.secondary" sx={{ px: 1, py: 0.5 }}>
+                Loading templates...
+              </Typography>
+            )}
+
+            {apiTemplatesError && (
+              <Typography variant="caption" color="error" sx={{ px: 1, py: 0.5 }}>
+                {apiTemplatesError}
+              </Typography>
+            )}
+
+            {!apiTemplatesLoading && !apiTemplatesError && apiTemplates.length === 0 && (
+              <Typography variant="caption" color="text.secondary" sx={{ px: 1, py: 0.5 }}>
+                No templates available
+              </Typography>
+            )}
+
+            {apiTemplates.map((template) => (
+              <SidebarButton key={template.id} href={`#api/${encodeURIComponent(template.subject)}`}>
+                {template.subject}
+              </SidebarButton>
+            ))}
           </Stack>
 
           <Divider />
