@@ -9,7 +9,17 @@ export default function SidebarButton({ href, children }: { href: string; childr
   const apiTemplates = useApiTemplates();
 
   const handleClick = () => {
-    resetDocument(getConfiguration(href, apiTemplates));
+    let templateId: string | null = null;
+
+    if (href.startsWith('#api/')) {
+      const subject = decodeURIComponent(href.replace('#api/', ''));
+      const found = apiTemplates.find((t) => t.subject === subject);
+      if (found) {
+        templateId = found.id;
+      }
+    }
+
+    resetDocument(getConfiguration(href, apiTemplates), templateId);
   };
   return (
     <Button size="small" href={href} onClick={handleClick}>

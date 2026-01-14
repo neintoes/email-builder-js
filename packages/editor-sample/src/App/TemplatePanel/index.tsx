@@ -19,6 +19,8 @@ import HtmlPanel from './HtmlPanel';
 import ImportJson from './ImportJson';
 import JsonPanel from './JsonPanel';
 import MainTabsGroup from './MainTabsGroup';
+import ReturnToAdminButton from './ReturnToAdminButton';
+import SaveButton from './SaveButton';
 import ShareButton from './ShareButton';
 
 export default function TemplatePanel() {
@@ -90,6 +92,7 @@ export default function TemplatePanel() {
         alignItems="center"
       >
         <ToggleSamplesPanelButton />
+        <ReturnToAdminButton />
         <Stack px={2} direction="row" gap={2} width="100%" justifyContent="space-between" alignItems="center">
           <Stack direction="row" spacing={2}>
             <MainTabsGroup />
@@ -113,6 +116,9 @@ export default function TemplatePanel() {
           </Stack>
         </Stack>
         <ToggleInspectorPanelButton />
+        <Stack direction="row" spacing={1} sx={{ ml: 2 }}>
+          <SaveButton />
+        </Stack>
       </Stack>
       <Box sx={{ height: 'calc(100vh - 49px)', overflow: 'auto', minWidth: 370 }}>{renderMainPanel()}</Box>
     </>

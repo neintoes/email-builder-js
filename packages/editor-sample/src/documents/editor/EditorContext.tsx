@@ -19,6 +19,8 @@ type TValue = {
   apiTemplates: HtmlContentDto[];
   apiTemplatesLoading: boolean;
   apiTemplatesError: string | null;
+
+  currentTemplateId: string | null;
 };
 
 const editorStateStore = create<TValue>(() => ({
@@ -34,6 +36,8 @@ const editorStateStore = create<TValue>(() => ({
   apiTemplates: [],
   apiTemplatesLoading: false,
   apiTemplatesError: null,
+
+  currentTemplateId: null,
 }));
 
 export function useDocument() {
@@ -85,11 +89,12 @@ export function setSidebarTab(selectedSidebarTab: TValue['selectedSidebarTab']) 
   return editorStateStore.setState({ selectedSidebarTab });
 }
 
-export function resetDocument(document: TValue['document']) {
+export function resetDocument(document: TValue['document'], templateId?: string | null) {
   return editorStateStore.setState({
     document,
     selectedSidebarTab: 'styles',
     selectedBlockId: null,
+    currentTemplateId: templateId ?? null,
   });
 }
 
@@ -146,4 +151,12 @@ export function setApiTemplatesError(error: string | null) {
     apiTemplatesError: error,
     apiTemplatesLoading: false,
   });
+}
+
+export function useCurrentTemplateId() {
+  return editorStateStore((s) => s.currentTemplateId);
+}
+
+export function setCurrentTemplateId(templateId: string | null) {
+  return editorStateStore.setState({ currentTemplateId: templateId });
 }
