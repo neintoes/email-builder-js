@@ -5,7 +5,7 @@ import { Button } from '@mui/material';
 
 export default function ReturnToAdminButton() {
   const onClick = () => {
-    window.location.href = 'http://www.thecode.zone/admin/dashboard';
+    window.location.href = 'http://thecode.zone/admin/dashboard';
   };
 
   return (
