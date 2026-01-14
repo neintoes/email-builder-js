@@ -2,6 +2,16 @@ import type { TEditorConfiguration } from '../documents/editor/core';
 import type { HtmlContentDto } from '../types/api';
 
 export function transformApiTemplate(htmlContent: HtmlContentDto): TEditorConfiguration {
+  // If builderJson exists, use it to restore the full editable structure
+  if (htmlContent.builderJson) {
+    try {
+      return JSON.parse(htmlContent.builderJson);
+    } catch (error) {
+      console.error('Failed to parse builderJson, falling back to description:', error);
+    }
+  }
+
+  // Fallback: wrap the HTML description in a single Html block
   const htmlBlockId = `api-html-block-${Date.now()}`;
 
   return {

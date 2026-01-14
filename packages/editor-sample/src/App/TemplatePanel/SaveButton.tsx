@@ -5,7 +5,7 @@ import { Button, Snackbar } from '@mui/material';
 import { renderToStaticMarkup } from '@usewaypoint/email-builder';
 
 import { useCurrentTemplateId, useDocument } from '../../documents/editor/EditorContext';
-import { saveTemplateDescription } from '../../services/templateApi';
+import { saveTemplate } from '../../services/templateApi';
 
 export default function SaveButton() {
   const document = useDocument();
@@ -14,6 +14,7 @@ export default function SaveButton() {
   const [saving, setSaving] = useState(false);
 
   const html = useMemo(() => renderToStaticMarkup(document, { rootBlockId: 'root' }), [document]);
+  const builderJson = useMemo(() => JSON.stringify(document), [document]);
 
   const onClick = async () => {
     if (!currentTemplateId) {
@@ -22,7 +23,7 @@ export default function SaveButton() {
     }
 
     setSaving(true);
-    const success = await saveTemplateDescription(currentTemplateId, html);
+    const success = await saveTemplate(currentTemplateId, html, builderJson);
     setSaving(false);
 
     if (success) {

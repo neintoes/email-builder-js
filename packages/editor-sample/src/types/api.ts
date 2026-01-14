@@ -2,6 +2,7 @@ export interface HtmlContentDto {
   id: string;
   subject: string;
   description: string;
+  builderJson?: string;
   title: string;
   showAsTemplate: boolean;
   isUserCreated: boolean;

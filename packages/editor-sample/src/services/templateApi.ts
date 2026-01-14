@@ -2,14 +2,14 @@ import type { HtmlContentDto } from '../types/api';
 
 const API_BASE_URL = 'http://localhost:8080';
 
-export async function saveTemplateDescription(id: string, description: string): Promise<boolean> {
+export async function saveTemplate(id: string, description: string, builderJson: string): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/automated-emails/${id}/description`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/automated-emails/${id}/template`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(description),
+      body: JSON.stringify({ description, builderJson }),
     });
 
     if (!response.ok) {
@@ -18,7 +18,7 @@ export async function saveTemplateDescription(id: string, description: string): 
 
     return true;
   } catch (error) {
-    console.error('Failed to save template description:', error);
+    console.error('Failed to save template:', error);
     return false;
   }
 }
