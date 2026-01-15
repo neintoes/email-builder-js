@@ -4,7 +4,7 @@ import { ArrowDownwardOutlined, ArrowUpwardOutlined, DeleteOutlined } from '@mui
 import { IconButton, Paper, Stack, SxProps, Tooltip } from '@mui/material';
 
 import { TEditorBlock } from '../../../editor/core';
-import { resetDocument, setSelectedBlockId, useDocument } from '../../../editor/EditorContext';
+import { resetDocument, setSelectedBlockId, useCurrentTemplateId, useDocument } from '../../../editor/EditorContext';
 import { ColumnsContainerProps } from '../../ColumnsContainer/ColumnsContainerPropsSchema';
 
 const sx: SxProps = {
@@ -22,6 +22,7 @@ type Props = {
 };
 export default function TuneMenu({ blockId }: Props) {
   const document = useDocument();
+  const currentTemplateId = useCurrentTemplateId();
 
   const handleDeleteClick = () => {
     const filterChildrenIds = (childrenIds: string[] | null | undefined) => {
@@ -77,7 +78,7 @@ export default function TuneMenu({ blockId }: Props) {
       }
     }
     delete nDocument[blockId];
-    resetDocument(nDocument);
+    resetDocument(nDocument, currentTemplateId);
   };
 
   const handleMoveClick = (direction: 'up' | 'down') => {
@@ -144,7 +145,7 @@ export default function TuneMenu({ blockId }: Props) {
       }
     }
 
-    resetDocument(nDocument);
+    resetDocument(nDocument, currentTemplateId);
     setSelectedBlockId(blockId);
   };
 
