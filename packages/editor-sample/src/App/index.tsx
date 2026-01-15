@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Stack, useTheme } from '@mui/material';
 
 import { useInspectorDrawerOpen, useSamplesDrawerOpen } from '../documents/editor/EditorContext';
+import { initializeParentMessaging } from '../services/parentMessaging';
 
 import InspectorDrawer, { INSPECTOR_DRAWER_WIDTH } from './InspectorDrawer';
 import SamplesDrawer, { SAMPLES_DRAWER_WIDTH } from './SamplesDrawer';
@@ -22,6 +23,10 @@ export default function App() {
 
   const marginLeftTransition = useDrawerTransition('margin-left', samplesDrawerOpen);
   const marginRightTransition = useDrawerTransition('margin-right', inspectorDrawerOpen);
+
+  useEffect(() => {
+    initializeParentMessaging();
+  }, []);
 
   return (
     <>

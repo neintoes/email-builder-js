@@ -1,0 +1,196 @@
+@*
+    Email Builder Editor Component for Blazor
+
+    Copy this file to your Components or Shared folder.
+
+    Usage:
+    <EmailBuilderEditor @ref="editorRef"
+                        TemplateId="@selectedTemplateId"
+                        OnEditorReady="HandleEditorReady"
+                        OnTemplateSaved="HandleTemplateSaved"
+                        OnTemplateLoaded="HandleTemplateLoaded"
+                        OnError="HandleError" />
+
+    @code {
+        private EmailBuilderEditor? editorRef;
+
+        private void HandleEditorReady() {
+            // Editor is ready, you can now call editorRef.LoadTemplate()
+        }
+
+        private void HandleTemplateSaved(TemplateSavedEventArgs args) {
+            if (args.Success) {
+                // Template saved successfully
+            }
+        }
+    }
+*@
+
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div class="email-builder-container" style="@ContainerStyle">
+    <iframe @ref="iframeRef"
+            src="/email-builder/"
+            style="width: 100%; height: 100%; border: none;"
+            title="Email Template Editor">
+    </iframe>
+</div>
+
+@code {
+    private ElementReference iframeRef;
+    private DotNetObjectReference<EmailBuilderEditor>? dotNetRef;
+    private bool isInitialized = false;
+
+    /// <summary>
+    /// Optional template ID to load when the editor is ready
+    /// </summary>
+    [Parameter]
+    public string? TemplateId { get; set; }
+
+    /// <summary>
+    /// Height of the editor container (default: 800px)
+    /// </summary>
+    [Parameter]
+    public string Height { get; set; } = "800px";
+
+    /// <summary>
+    /// Additional CSS styles for the container
+    /// </summary>
+    [Parameter]
+    public string? AdditionalStyles { get; set; }
+
+    /// <summary>
+    /// Fired when the editor is ready to receive commands
+    /// </summary>
+    [Parameter]
+    public EventCallback OnEditorReady { get; set; }
+
+    /// <summary>
+    /// Fired when a template is saved
+    /// </summary>
+    [Parameter]
+    public EventCallback<TemplateSavedEventArgs> OnTemplateSaved { get; set; }
+
+    /// <summary>
+    /// Fired when a template is loaded
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnTemplateLoaded { get; set; }
+
+    /// <summary>
+    /// Fired when the editor reports an error
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnError { get; set; }
+
+    /// <summary>
+    /// Fired when the templates list is received
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnTemplatesReceived { get; set; }
+
+    private string ContainerStyle => $"height: {Height}; {AdditionalStyles}";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("emailBuilderBridge.initialize", iframeRef, dotNetRef);
+            isInitialized = true;
+        }
+    }
+
+    /// <summary>
+    /// Load a template by its ID
+    /// </summary>
+    public async Task LoadTemplate(string templateId)
+    {
+        if (!isInitialized) return;
+        await JSRuntime.InvokeVoidAsync("emailBuilderBridge.loadTemplate", templateId);
+    }
+
+    /// <summary>
+    /// Load a template from raw JSON
+    /// </summary>
+    public async Task LoadTemplateJson(string json)
+    {
+        if (!isInitialized) return;
+        await JSRuntime.InvokeVoidAsync("emailBuilderBridge.loadTemplateJson", json);
+    }
+
+    /// <summary>
+    /// Request the list of available templates
+    /// </summary>
+    public async Task GetTemplates()
+    {
+        if (!isInitialized) return;
+        await JSRuntime.InvokeVoidAsync("emailBuilderBridge.getTemplates");
+    }
+
+    /// <summary>
+    /// Called from JavaScript when a message is received from the editor
+    /// </summary>
+    [JSInvokable]
+    public async Task OnMessageFromEditor(string messageJson)
+    {
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(messageJson);
+            var root = document.RootElement;
+            var messageType = root.GetProperty("type").GetString();
+
+            switch (messageType)
+            {
+                case "EDITOR_READY":
+                    await OnEditorReady.InvokeAsync();
+                    // Auto-load template if TemplateId was provided
+                    if (!string.IsNullOrEmpty(TemplateId))
+                    {
+                        await LoadTemplate(TemplateId);
+                    }
+                    break;
+
+                case "TEMPLATE_SAVED":
+                    var savedTemplateId = root.GetProperty("templateId").GetString() ?? "";
+                    var success = root.GetProperty("success").GetBoolean();
+                    await OnTemplateSaved.InvokeAsync(new TemplateSavedEventArgs
+                    {
+                        TemplateId = savedTemplateId,
+                        Success = success
+                    });
+                    break;
+
+                case "TEMPLATE_LOADED":
+                    var loadedTemplateId = root.GetProperty("templateId").GetString() ?? "";
+                    await OnTemplateLoaded.InvokeAsync(loadedTemplateId);
+                    break;
+
+                case "TEMPLATES_LIST":
+                    var templatesJson = root.GetProperty("templates").GetRawText();
+                    await OnTemplatesReceived.InvokeAsync(templatesJson);
+                    break;
+
+                case "ERROR":
+                    var errorMessage = root.GetProperty("message").GetString() ?? "Unknown error";
+                    await OnError.InvokeAsync(errorMessage);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing editor message: {ex.Message}");
+            await OnError.InvokeAsync($"Error processing editor message: {ex.Message}");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (isInitialized)
+        {
+            await JSRuntime.InvokeVoidAsync("emailBuilderBridge.dispose");
+        }
+        dotNetRef?.Dispose();
+    }
+}

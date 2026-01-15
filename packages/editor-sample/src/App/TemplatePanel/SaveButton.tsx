@@ -5,6 +5,7 @@ import { Button, Snackbar } from '@mui/material';
 import { renderToStaticMarkup } from '@usewaypoint/email-builder';
 
 import { useCurrentTemplateId, useDocument } from '../../documents/editor/EditorContext';
+import { notifyTemplateSaved } from '../../services/parentMessaging';
 import { saveTemplate } from '../../services/templateApi';
 
 export default function SaveButton() {
@@ -25,6 +26,9 @@ export default function SaveButton() {
     setSaving(true);
     const success = await saveTemplate(currentTemplateId, html, builderJson);
     setSaving(false);
+
+    // Notify parent window (Blazor) of save result
+    notifyTemplateSaved(currentTemplateId, success);
 
     if (success) {
       setMessage('Template saved successfully.');
