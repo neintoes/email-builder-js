@@ -15,3 +15,11 @@ export interface HtmlContentDto {
   isAutomatedEmail?: boolean;
   lastUpdated?: string;
 }
+
+export interface AdminFileDto {
+  id: string;
+  name: string;
+  file: string;
+  contentType: string;
+  url: string | null;
+}

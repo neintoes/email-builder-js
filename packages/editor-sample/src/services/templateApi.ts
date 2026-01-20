@@ -1,4 +1,4 @@
-import type { HtmlContentDto } from '../types/api';
+import type { HtmlContentDto, AdminFileDto } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
@@ -38,6 +38,27 @@ export async function fetchTemplates(): Promise<HtmlContentDto[]> {
     return data;
   } catch (error) {
     console.error('Failed to fetch templates from API:', error);
+    return [];
+  }
+}
+
+export async function fetchAdminImages(): Promise<AdminFileDto[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/automated-emails/admin-files`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data: AdminFileDto[] = await response.json();
+    // Filter to only include files with valid URLs and image content types
+    const imageFiles = data.filter(
+      (file) => file.url && file.contentType?.startsWith('image/')
+    );
+
+    return imageFiles;
+  } catch (error) {
+    console.error('Failed to fetch admin images from API:', error);
     return [];
   }
 }
