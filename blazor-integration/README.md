@@ -149,6 +149,7 @@ The email builder expects these endpoints:
 | `OnEditorReady` | EventCallback | Editor is initialized and ready |
 | `OnTemplateSaved` | EventCallback<TemplateSavedEventArgs> | Template was saved |
 | `OnTemplateLoaded` | EventCallback<string> | Template was loaded (passes template ID) |
+| `OnNavigateBack` | EventCallback | User clicked "Return to Admin" button |
 | `OnError` | EventCallback<string> | An error occurred |
 | `OnTemplatesReceived` | EventCallback<string> | Template list received (JSON) |
 

@@ -9,9 +9,12 @@
                         OnEditorReady="HandleEditorReady"
                         OnTemplateSaved="HandleTemplateSaved"
                         OnTemplateLoaded="HandleTemplateLoaded"
+                        OnNavigateBack="HandleNavigateBack"
                         OnError="HandleError" />
 
     @code {
+        [Inject] private NavigationManager Navigation { get; set; } = default!;
+
         private EmailBuilderEditor? editorRef;
 
         private void HandleEditorReady() {
@@ -22,6 +25,11 @@
             if (args.Success) {
                 // Template saved successfully
             }
+        }
+
+        private void HandleNavigateBack() {
+            // Navigate to your admin dashboard or previous page
+            Navigation.NavigateTo("/admin/dashboard");
         }
     }
 *@
@@ -89,6 +97,12 @@
     /// </summary>
     [Parameter]
     public EventCallback<string> OnTemplatesReceived { get; set; }
+
+    /// <summary>
+    /// Fired when the user clicks "Return to Admin" in the editor
+    /// </summary>
+    [Parameter]
+    public EventCallback OnNavigateBack { get; set; }
 
     private string ContainerStyle => $"height: {Height}; {AdditionalStyles}";
 
@@ -175,6 +189,10 @@
                 case "ERROR":
                     var errorMessage = root.GetProperty("message").GetString() ?? "Unknown error";
                     await OnError.InvokeAsync(errorMessage);
+                    break;
+
+                case "NAVIGATE_BACK":
+                    await OnNavigateBack.InvokeAsync();
                     break;
             }
         }

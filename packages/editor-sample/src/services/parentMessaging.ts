@@ -16,6 +16,7 @@ type OutgoingMessage =
   | { type: 'TEMPLATE_LOADED'; templateId: string }
   | { type: 'TEMPLATE_SAVED'; templateId: string; success: boolean }
   | { type: 'TEMPLATES_LIST'; templates: HtmlContentDto[] }
+  | { type: 'NAVIGATE_BACK' }
   | { type: 'ERROR'; message: string };
 
 let templatesCache: HtmlContentDto[] = [];
@@ -112,4 +113,12 @@ export function notifyTemplateSaved(templateId: string, success: boolean) {
 
 export function updateTemplatesCache(templates: HtmlContentDto[]) {
   templatesCache = templates;
+}
+
+export function isRunningInIframe(): boolean {
+  return window.parent !== window;
+}
+
+export function requestNavigateBack() {
+  sendMessageToParent({ type: 'NAVIGATE_BACK' });
 }
