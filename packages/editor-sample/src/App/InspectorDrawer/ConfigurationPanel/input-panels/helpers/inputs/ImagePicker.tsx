@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import {
   Box,
@@ -13,9 +13,9 @@ import {
   ImageListItemBar,
   Typography,
 } from '@mui/material';
-import { Close as CloseIcon, Collections as CollectionsIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Collections as CollectionsIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 
-import { fetchAdminImages } from '../../../../../../services/templateApi';
+import { fetchAdminImages, uploadImage } from '../../../../../../services/templateApi';
 import type { AdminFileDto } from '../../../../../../types/api';
 
 type Props = {
@@ -23,11 +23,15 @@ type Props = {
   onSelect: (url: string) => void;
 };
 
+const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+
 export default function ImagePicker({ label, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [images, setImages] = useState<AdminFileDto[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open && images.length === 0) {
@@ -56,6 +60,41 @@ export default function ImagePicker({ label, onSelect }: Props) {
     }
   };
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Reset the input so the same file can be selected again
+    event.target.value = '';
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError('Invalid file type. Only PNG, JPEG, and WebP images are allowed.');
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const result = await uploadImage(file);
+      // Reload images to include the newly uploaded one
+      await loadImages();
+      // Optionally auto-select the uploaded image
+      onSelect(result.url);
+      setOpen(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upload image';
+      setError(message);
+      console.error('Error uploading image:', err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <>
       <Button
@@ -76,9 +115,27 @@ export default function ImagePicker({ label, onSelect }: Props) {
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6">Select an Image</Typography>
-          <IconButton onClick={() => setOpen(false)} size="small">
-            <CloseIcon />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant="contained"
+              startIcon={uploading ? <CircularProgress size={16} color="inherit" /> : <CloudUploadIcon />}
+              onClick={handleUploadClick}
+              disabled={uploading || loading}
+              size="small"
+            >
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Button>
+            <IconButton onClick={() => setOpen(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/png,image/jpeg,image/webp"
+            style={{ display: 'none' }}
+          />
         </DialogTitle>
         <DialogContent>
           {loading && (

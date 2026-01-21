@@ -62,3 +62,25 @@ export async function fetchAdminImages(): Promise<AdminFileDto[]> {
     return [];
   }
 }
+
+export interface UploadImageResult {
+  filename: string;
+  url: string;
+}
+
+export async function uploadImage(file: File): Promise<UploadImageResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/automated-emails/images`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
