@@ -13,9 +13,9 @@ import {
   ImageListItemBar,
   Typography,
 } from '@mui/material';
-import { Close as CloseIcon, Collections as CollectionsIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Collections as CollectionsIcon, CloudUpload as CloudUploadIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
-import { fetchAdminImages, uploadImage } from '../../../../../../services/templateApi';
+import { fetchAdminImages, uploadImage, deleteImage } from '../../../../../../services/templateApi';
 import type { AdminFileDto } from '../../../../../../types/api';
 
 type Props = {
@@ -30,6 +30,7 @@ export default function ImagePicker({ label, onSelect }: Props) {
   const [images, setImages] = useState<AdminFileDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,6 +93,25 @@ export default function ImagePicker({ label, onSelect }: Props) {
       console.error('Error uploading image:', err);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDelete = async (event: React.MouseEvent, imageId: string) => {
+    event.stopPropagation(); // Prevent image selection when clicking delete
+
+    setDeletingId(imageId);
+    setError(null);
+
+    try {
+      await deleteImage(imageId);
+      // Remove the deleted image from state
+      setImages((prev) => prev.filter((img) => img.id !== imageId));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete image';
+      setError(message);
+      console.error('Error deleting image:', err);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -191,6 +211,20 @@ export default function ImagePicker({ label, onSelect }: Props) {
                         fontSize: '0.75rem',
                       },
                     }}
+                    actionIcon={
+                      <IconButton
+                        sx={{ color: 'rgba(255, 255, 255, 0.7)', '&:hover': { color: 'error.main' } }}
+                        onClick={(e) => handleDelete(e, image.id)}
+                        disabled={deletingId === image.id}
+                        size="small"
+                      >
+                        {deletingId === image.id ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          <DeleteIcon fontSize="small" />
+                        )}
+                      </IconButton>
+                    }
                   />
                 </ImageListItem>
               ))}

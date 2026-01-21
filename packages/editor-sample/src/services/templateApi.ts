@@ -84,3 +84,16 @@ export async function uploadImage(file: File): Promise<UploadImageResult> {
 
   return response.json();
 }
+
+export async function deleteImage(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/automated-emails/admin-files/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Image not found');
+    }
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+}
